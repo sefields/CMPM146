@@ -6,7 +6,8 @@ def load_level(filename):
 	
 	#The following are dictionaries.
 	#A dictionary is an unordered set of key-value pairs.
-	#In these dicts, keys will be (i,j) pairs. Values will be the char.
+	#In walls / spaces, keys will be (i,j) pairs. Values will be the char.
+	#In waypoints it's the reverse.
 	walls = {}
 	spaces = {}
 	waypoints = {}
