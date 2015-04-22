@@ -37,24 +37,23 @@ def find_path (source_point, destination_point, mesh) :
 		_,cell = heappop(q)
 		
 		#Get all the neighbors of that box
-		neighbors = mesh['adj'][cell]
-		
+		neighbors = mesh['adj'][cell]		
 		#If destination, return
 		if cell == destination_box:
 			return (traceback(prev,cell,source_point, destination_point), visited)
 		for n in neighbors:
 			visited.append(n)
 			#alt is the distance from source to this neighbor, with the heuristic too
-			alt = dist[cell] + distance(cell,n) + distance(cell, destination_box)
+			alt = dist[cell] + distance(cell,n)
 			#If this is shorter than the previous shortest
 			if n not in dist or alt < dist[n]:
 				dist[n] = alt
 				prev[n] = cell
-				heappush(q,(alt,n))
-	
+				heappush(q,((alt+distance(n,destination_box)),n))
+	print "No path possible"
 	return path, visited
 	
-def bidirectional (source_point, destination_point, mesh) :
+"""def bidirectional (source_point, destination_point, mesh) :
 	path = []
 	visited = []
 			
@@ -104,7 +103,7 @@ def bidirectional (source_point, destination_point, mesh) :
 				dist[n] = alt
 				prev[n] = cell
 				heappush(q,(alt,n, curr_goal))
-	
+	print "No path possible"
 	return path, visited
 	
 def dijkstas_shortest_path (source_point, destination_point, mesh) :
@@ -153,7 +152,7 @@ def dijkstas_shortest_path (source_point, destination_point, mesh) :
 				heappush(q,(alt,n))
 	
 	return path, visited
-	
+"""	
 def traceback(prevlist, cell, src, dest):
 	path = []
 	
@@ -175,32 +174,8 @@ def traceback(prevlist, cell, src, dest):
 		cell = prevlist[cell]
 		
 	#print src
-	path.append((lastPoint,src))	
+	path.append((lastPoint,src))
 	return path
-	
-"""def traceback(prevlist, cell, src, dest):
-	path = []
-	
-	lastBox = cell
-	cell = prevlist[cell]
-	
-	lastPoint = dest
-	cellPoint = find_border_point(lastPoint, cell)
-	
-	while cell != None:
-		#Append a line between the last and the second-to-last box midpoints
-		cellPoint = find_border_point(lastPoint, cell)
-		path.append((lastPoint, cellPoint))
-		
-		#Last box is now what was second-to-last, cell is now the thing before that
-		lastBox = cell
-		lastPoint = cellPoint
-		#lastBoxMP = midpoint(lastBox)
-		cell = prevlist[cell]
-		
-	#print src
-	path.append((lastPoint,src))	
-	return path"""
 	
 def midpoint(box):
 	x = round((0.5*(box[0]+box[1])), 0)
