@@ -7,7 +7,107 @@ import Tkinter
 from heapq import heappush, heappop
 from math import sqrt
 
+# This is A*
 def find_path (source_point, destination_point, mesh) :
+	path = []
+	visited = []
+			
+	#Dictionary declarations:
+	prev = {}
+	dist = {}
+	
+	#set dist and prev for src
+	dist[find_box(source_point, mesh)] = 0
+	prev[find_box(source_point, mesh)] = None
+	
+	#q is list of unvisited boxes
+	q = []
+	
+	source_box = find_box(source_point, mesh);
+	
+	#push source_point onto q
+	heappush(q, (0, source_box))
+	
+	destination_box = find_box(destination_point , mesh);
+	inDist = 0
+	altDist = 0
+	#Iterate through q
+	while q:
+		#Store the cell and goal
+		_,cell = heappop(q)
+		
+		#Get all the neighbors of that box
+		neighbors = mesh['adj'][cell]
+		
+		#If destination, return
+		if cell == destination_box:
+			return (traceback(prev,cell,source_point, destination_point), visited)
+		for n in neighbors:
+			visited.append(n)
+			#alt is the distance from source to this neighbor, with the heuristic too
+			alt = dist[cell] + distance(cell,n) + distance(cell, destination_box)
+			#If this is shorter than the previous shortest
+			if n not in dist or alt < dist[n]:
+				dist[n] = alt
+				prev[n] = cell
+				heappush(q,(alt,n))
+	
+	return path, visited
+	
+def bidirectional (source_point, destination_point, mesh) :
+	path = []
+	visited = []
+			
+	#Dictionary declarations:
+	prev = {}
+	dist = {}
+	backward_prev = {}
+	backward_dist = {}
+	
+	#set dist and prev for src
+	dist[find_box(source_point, mesh)] = 0
+	prev[find_box(source_point, mesh)] = None
+	
+	#q is list of unvisited boxes
+	q = []
+	
+	source_box = find_box(source_point, mesh);
+	destination_box = find_box(destination_point, mesh);
+	
+	#push source_point onto q
+	heappush(q, (0, source_box, destination_box))
+	
+	destination_box = find_box(destination_point , mesh);
+	inDist = 0
+	altDist = 0
+	#Iterate through q
+	while q:
+		#Store the cell and goal
+		_,cell,curr_goal = heappop(q)
+		
+		#Get all the neighbors of that box
+		neighbors = mesh['adj'][cell]
+		
+		#If destination, return
+		if cell == destination_box:
+			print "This doesn't happen"
+			return (traceback(prev,cell,source_point, destination_point), visited)
+		for n in neighbors:
+			visited.append(n)
+			#alt is the distance from source to this neighbor, with the heuristic too
+			if curr_goal == destination_box:
+				alt = dist[cell] + distance(cell,n) + distance(cell, destination_box)
+			else:
+				alt = dist[cell] + distance(cell,n) + distance(cell, source_box)
+			#If this is shorter than the previous shortest
+			if n not in dist or alt < dist[n]:
+				dist[n] = alt
+				prev[n] = cell
+				heappush(q,(alt,n, curr_goal))
+	
+	return path, visited
+	
+def dijkstas_shortest_path (source_point, destination_point, mesh) :
 	path = []
 	visited = []
 			
@@ -34,13 +134,6 @@ def find_path (source_point, destination_point, mesh) :
 		u = heappop(q)
 		#Throw away distance, store (x1,x2,y1,y2) in cell
 		_,cell = u
-		
-		#Go through all boxes, see which one our point is in
-		#significant_box = find_box(cell, mesh)
-		# print "SIG BOX "
-		# print significant_box
-		# print "CELL "
-		# print cell
 				
 		#Get all the neighbors of that box
 		neighbors = mesh['adj'][cell]
@@ -48,60 +141,66 @@ def find_path (source_point, destination_point, mesh) :
 		#If destination, return
 		if cell == destination_box:
 			print "This doesn't happen"
-			return (traceback(prev,cell,source_point), visited)
+			return (traceback(prev,cell,source_point, destination_point), visited)
 		for n in neighbors:
-		
 			visited.append(n)
 			#alt is the distance from source to this neighbor
-			#next_point = find_border_point(cell,n)
 			alt = dist[cell] + distance(cell,n)
 			#If this is shorter than the previous shortest
-			
 			if n not in dist or alt < dist[n]:
 				dist[n] = alt
 				prev[n] = cell
 				heappush(q,(alt,n))
 	
 	return path, visited
-
-"""def find_path (source_point, destination_point, mesh) :
+	
+def traceback(prevlist, cell, src, dest):
 	path = []
-	visited = []
 	
-	visited.append(find_box(source_point,mesh))
-	visited.append(find_box(destination_point,mesh))
+	lastBox = cell
+	cell = prevlist[cell]
 	
-	return path, visited"""
+	lastPoint = dest
+	cellPoint = find_border_point(lastPoint, cell)
 	
-"""def traceback(prevlist, cell, src):
-	path = []
-	lastPoint = cell
-	cell = prevlist[cell];
 	while cell != None:
-		path.append((lastPoint, cell));
+		#Append a line between the last and the second-to-last box midpoints
+		cellPoint = find_border_point(lastPoint, cell)
+		path.append((lastPoint, cellPoint))
 		
-		cell = prevlist[cell];
-		lastPoint = cell
-		
-	return path"""
-	
-def traceback(prevlist, cell, src):
-	path = []
-	lastPoint = cell
-	lastPointMP = midpoint(lastPoint)
-	cell = prevlist[cell];
-	cellMP = midpoint(cell)
-	while cell != None:
-		cellMP = midpoint(cell)
-		path.append((lastPointMP, cellMP));
-		
-		lastPoint = cell
-		lastPointMP = midpoint(lastPoint)
-		cell = prevlist[cell];
+		#Last box is now what was second-to-last, cell is now the thing before that
+		lastBox = cell
+		lastPoint = cellPoint
+		#lastBoxMP = midpoint(lastBox)
+		cell = prevlist[cell]
 		
 	#print src
-	#path.append((lastPointMP,src))	
+	path.append((lastPoint,src))	
 	return path
+	
+"""def traceback(prevlist, cell, src, dest):
+	path = []
+	
+	lastBox = cell
+	cell = prevlist[cell]
+	
+	lastPoint = dest
+	cellPoint = find_border_point(lastPoint, cell)
+	
+	while cell != None:
+		#Append a line between the last and the second-to-last box midpoints
+		cellPoint = find_border_point(lastPoint, cell)
+		path.append((lastPoint, cellPoint))
+		
+		#Last box is now what was second-to-last, cell is now the thing before that
+		lastBox = cell
+		lastPoint = cellPoint
+		#lastBoxMP = midpoint(lastBox)
+		cell = prevlist[cell]
+		
+	#print src
+	path.append((lastPoint,src))	
+	return path"""
 	
 def midpoint(box):
 	x = round((0.5*(box[0]+box[1])), 0)
@@ -125,7 +224,7 @@ def find_box(point, mesh):
 	return None
 	
 def find_border_point(point, box):
-	resultx = point[0]
+	"""resultx = point[0]
 	resulty = point[1]
 	
 	if point[0] > box[1]:
@@ -137,8 +236,8 @@ def find_border_point(point, box):
 	if point[1] < box[2]:
 		resulty = box[2]
 	result = (resultx, resulty)
-	return result
-	"""currX = point[0]
+	return result"""
+	currX = point[0]
 	currY = point[1]
 	
 	borderX1 = box[0]
@@ -149,4 +248,4 @@ def find_border_point(point, box):
 	currX = min(borderX2-1,max(borderX1,currX))
 	currY = min(borderY2-1,max(borderY1,currY))
 		
-	return (currX, currY)"""
+	return (currX, currY)
