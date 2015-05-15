@@ -33,6 +33,9 @@ def analyze(design):
     u = heappop(q)
     _, state = u
     cPos, cAb = state
+    
+    if sim.is_end_state(state):
+      print "End state reachable"
 
     #check neighbors and inserting info from shortest path
     for move in moves:

@@ -41,6 +41,11 @@ class Simulator(object):
       return next_pos, next_abilities
     else:
       return None
+      
+  def is_end_state(self, state):
+    if state[0] in self.specials and self.specials[state[0]] is 5:
+      return True
+    return False
 
   def _resolve_movement(self, (i,j), abilities, move):
     e = self.elements
