@@ -1,99 +1,159 @@
 from p6_game import Simulator
 from heapq import heappush, heappop
 
-ANALYSIS = {}
 
-shortest_paths = {}
+ANALYSIS = {}
 
 
 #design is a dict containing information loaded from
 #the map file named on the cmd line
 def analyze(design):
+  global ANALYSIS
+  ANALYSIS.clear()
+  ANALYSIS = {}
+  
+  #Use this dict to construct a Simulator object.
+  sim = Simulator(design)
+  abilities = sim.get_abilities()
+  
+  for ability in abilities:
+    sim = Simulator(design)
+    path = _ability_path(sim, ability)
+    if path[0] and path[1]:
+      ANALYSIS[ability] = path
+  
+
+def inspect((i1,j1), draw_line):
+    for ability in ANALYSIS:
+        #Working backward from part 2 (after target ability was found)
+        node = (i1, j1)
+        prevs, states_list, last_states = ANALYSIS[ability][1]
+        
+        i = -1
+        for index, prev in enumerate(prevs):
+            if node in prev:
+                i = index
+                break
+        
+        if i is -1:
+            #print "No path to this location"
+            break
+        else:
+            pass#print "Path found to location"
+            
+        prev = prevs[i]
+        
+        nprev = prev[node]
+            
+        while nprev:
+            draw_line(node, nprev, ability, states_list[i][nprev][1])
+            node = nprev
+            nprev = prev[nprev]
+        
+        i -= 1
+        
+        while i >= 0:
+            prev = prevs[i]
+            node = last_states[i][0]
+            
+            nprev = prev[node]
+            
+            while nprev:
+                draw_line(node, nprev, ability, states_list[i][nprev][1])
+                node = nprev
+                nprev = prev[nprev]
+                
+            i -= 1
+            
+        #Continuing backward with part 1
+        prevs, states_list, last_states = ANALYSIS[ability][0]
+        
+        i = -1
+        for index, prev in enumerate(prevs):
+            if node in prev:
+                i = index
+                break
+        
+        if i is -1:
+            #print "No path to this location"
+            break
+        else:
+            pass#print "Path found to location"
+            
+        prev = prevs[i]
+        
+        nprev = prev[node]
+            
+        while nprev:
+            draw_line(node, nprev, ability, states_list[i][nprev][1])
+            node = nprev
+            nprev = prev[nprev]
+        
+        i -= 1
+        
+        while i >= 0:
+            prev = prevs[i]
+            node = last_states[i][0]
+            
+            nprev = prev[node]
+            
+            while nprev:
+                draw_line(node, nprev, ability, states_list[i][nprev][1])
+                node = nprev
+                nprev = prev[nprev]
+                
+            i -= 1
+        
+
+def _ability_path(simulator, ability):
+    init = simulator.get_initial_state()
+    
+    part1 = _single_path(simulator, init, ability)
+    last = part1[2][-1]
+    if last:
+        part2 = _single_path(simulator, last, None)
+    else:
+        part2 = None #ability wasn't found
+    
+    return (part1, part2)
+    
+    
+def _single_path(simulator, init, goal):
   prevs = []
   states_list = []
   last_states = []
   
-  #Use this dict to construct a Simulator object.
-  sim = Simulator(design)
-  init = sim.get_initial_state()
-  
   er = False
   
-  prev, states, last_state, end_reachable = _search(sim, init)
+  prev, states, last_state, end_reachable = _search(simulator, init)
   if er is False:
-    er = end_reachable
+      er = end_reachable
   
   prevs.append(prev)
   states_list.append(states)
   last_states.append(last_state)
   
-  while last_state:
-      prev, states, last_state, end_reachable = _search(sim, last_state)
+  while last_state and not simulator.is_ability(last_state, goal):
+      prev, states, last_state, end_reachable = _search(simulator, last_state)
       if er is False:
-        er = end_reachable
+          er = end_reachable
       
       prevs.append(prev)
       states_list.append(states)
       last_states.append(last_state)
   
   if er:
-    print "End state reachable"
+      pass#print "End state reachable"
   else:
-    print "End state unreachable"
+      pass#print "End state unreachable"
   
   #prevs.reverse()
   #states_list.reverse()
   #last_states.reverse()
   
-  global ANALYSIS
-  ANALYSIS = (prevs, states_list, last_states)
-  
-  return prev
-
-  
-def inspect((i,j), draw_line):
-    # TODO: use ANALYSIS and (i,j) draw some lines
+  return (prevs, states_list, last_states)
     
-    node = (i, j)
-    prevs, states_list, last_states = ANALYSIS
     
-    i = -1
-    for index, prev in enumerate(prevs):
-        if node in prev:
-            i = index
-            break
-    
-    if i is -1:
-        print "No path to this location"
-        return
-    else:
-        print "Path found to location"
-        
-    prev = prevs[i]
-    
-    nprev = prev[node]
-        
-    while nprev:
-        draw_line(node, nprev, (0, 0), states_list[i][nprev][1])
-        node = nprev
-        nprev = prev[nprev]
-    
-    i -= 1
-    
-    while i >= 0:
-        prev = prevs[i]
-        node = last_states[i][0]
-        
-        nprev = prev[node]
-        
-        while nprev:
-            draw_line(node, nprev, (0, 0), states_list[i][nprev][1])
-            node = nprev
-            nprev = prev[nprev]
-            
-        i -= 1
-        
-        
 def _search(simulator, initial_state):
   end_reachable = False
   iPos, iAb = initial_state
