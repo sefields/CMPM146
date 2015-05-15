@@ -36,13 +36,15 @@ def analyze(design):
 
     #check neighbors and inserting info from shortest path
     for move in moves:
-      nPos = ()
-      nPos, nAb = sim.get_next_state(state, move)
-      alt = dist[cPos] + 1
-      if nPos not in dist or alt < dist[nPos]:
-        dist[nPos] = alt
-    	prev[nPos] = cPos
-    	heappush(q, (alt, nPos))
+      next_state = sim.get_next_state(state, move)
+      if next_state:
+          nPos = ()
+          nPos, nAb = next_state
+          alt = dist[cPos] + 1
+          if nPos not in dist or alt < dist[nPos]:
+            dist[nPos] = alt
+            prev[nPos] = cPos
+            heappush(q, (alt, next_state))
 	
   return prev
 

@@ -29,8 +29,8 @@ class Simulator(object):
     return self.MOVES
 
   def get_next_state(self, state, move):
-    pos, abilities = state  
-
+    pos, abilities = state
+    
     next_pos = self._resolve_movement(pos, abilities, move)
     if next_pos in self.specials:
       next_abilities = self._upgrade_abilities(abilities, self.specials[next_pos])
